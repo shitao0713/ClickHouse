@@ -54,7 +54,7 @@ public:
 
     bool hasSortingKey() const { return part->storage.hasSortingKey(); }
 
-    Names getSortingKeyColumns() const override { return part->storage.getSortingKeyColumns(); }
+    Names getColumnsRequiredForSortingKey() const override { return part->storage.getColumnsRequiredForSortingKey(); }
 
     NamesAndTypesList getVirtuals() const override
     {

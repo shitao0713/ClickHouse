@@ -342,7 +342,6 @@ public:
     Names getColumnsRequiredForPrimaryKey() const override { return primary_key_expr->getRequiredColumns(); }
     Names getColumnsRequiredForSampling() const override { return columns_required_for_sampling; }
     Names getColumnsRequiredForFinal() const override { return sorting_key_expr->getRequiredColumns(); }
-    Names getSortingKeyColumns() const override { return sorting_key_columns; }
 
     ColumnDependencies getColumnDependencies(const NameSet & updated_columns) const override;
 

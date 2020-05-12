@@ -37,13 +37,13 @@ InputSortingInfoPtr ReadInOrderOptimizer::getInputOrder(const StoragePtr & stora
     {
         if (!merge_tree->hasSortingKey())
             return {};
-        sorting_key_columns = merge_tree->getSortingKeyColumns();
+        sorting_key_columns = merge_tree->getColumnsRequiredForSortingKey();
     }
     else if (const auto * part = dynamic_cast<const StorageFromMergeTreeDataPart *>(storage.get()))
     {
         if (!part->hasSortingKey())
             return {};
-        sorting_key_columns = part->getSortingKeyColumns();
+        sorting_key_columns = part->getColumnsRequiredForSortingKey();
     }
     else /// Inapplicable storage type
     {
