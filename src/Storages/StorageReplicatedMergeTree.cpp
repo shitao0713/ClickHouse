@@ -3873,6 +3873,11 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
       * To do this, check its node `log_pointer` - the maximum number of the element taken from `log` + 1.
       */
 
+    const auto & check_replica_become_inactive = [this, &replica]() {
+        return !getZooKeeper()->exists(zookeeper_path + "/replicas/" + replica + "/is_active");
+    };
+    constexpr auto event_wait_timeout_ms = 1000;
+
     if (startsWith(entry.znode_name, "log-"))
     {
         /** In this case, just take the number from the node name `log-xxxxxxxxxx`.
@@ -3884,7 +3889,7 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
         LOG_DEBUG(log, "Waiting for " << replica << " to pull " << log_node_name << " to queue");
 
         /// Let's wait until entry gets into the replica queue.
-        while (true)
+        while (wait_for_non_active || !check_replica_become_inactive())
         {
             zkutil::EventPtr event = std::make_shared<Poco::Event>();
 
@@ -3892,7 +3897,10 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
             if (!log_pointer.empty() && parse<UInt64>(log_pointer) > log_index)
                 break;
 
-            event->wait();
+            if (wait_for_non_active)
+                event->wait();
+            else
+                event->tryWait(event_wait_timeout_ms);
         }
     }
     else if (startsWith(entry.znode_name, "queue-"))
@@ -3929,7 +3937,7 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
             LOG_DEBUG(log, "Waiting for " << replica << " to pull " << log_node_name << " to queue");
 
             /// Let's wait until the entry gets into the replica queue.
-            while (true)
+            while (wait_for_non_active || !check_replica_become_inactive())
             {
                 zkutil::EventPtr event = std::make_shared<Poco::Event>();
 
@@ -3937,7 +3945,10 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
                 if (!log_pointer_new.empty() && parse<UInt64>(log_pointer_new) > log_index)
                     break;
 
-                event->wait();
+                if (wait_for_non_active)
+                    event->wait();
+                else
+                    event->tryWait(event_wait_timeout_ms);
             }
         }
     }
@@ -3982,9 +3993,6 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
     if (wait_for_non_active)
         return getZooKeeper()->waitForDisappear(path_to_wait_on);
 
-    const auto & check_replica_become_inactive = [this, &replica]() {
-        return !getZooKeeper()->exists(zookeeper_path + "/replicas/" + replica + "/is_active");
-    };
     return getZooKeeper()->waitForDisappear(path_to_wait_on, check_replica_become_inactive);
 }
 
