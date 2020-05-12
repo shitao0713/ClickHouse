@@ -219,7 +219,7 @@ Pipes MergeTreeDataSelectExecutor::readFromParts(
     data.check(real_column_names);
 
     const Settings & settings = context.getSettingsRef();
-    Names primary_key_columns = data.getColumnsRequiredForPrimaryKey();
+    Names primary_key_columns = data.primary_key_columns;
 
     KeyCondition key_condition(query_info, context, primary_key_columns, data.primary_key_expr);
 
@@ -1003,9 +1003,8 @@ Pipes MergeTreeDataSelectExecutor::spreadMarkRangesAmongStreamsWithOrder(
         if (pipes.size() > 1)
         {
             SortDescription sort_description;
-            auto sorting_key_columns = data.getColumnsRequiredForSortingKey();
             for (size_t j = 0; j < input_sorting_info->order_key_prefix_descr.size(); ++j)
-                sort_description.emplace_back(sorting_key_columns[j],
+                sort_description.emplace_back(data.sorting_key_columns[j],
                     input_sorting_info->direction, 1);
 
             /// Project input columns to drop columns from sorting_key_prefix_expr
