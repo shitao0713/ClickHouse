@@ -3873,7 +3873,8 @@ bool StorageReplicatedMergeTree::waitForReplicaToProcessLogEntry(const String & 
       * To do this, check its node `log_pointer` - the maximum number of the element taken from `log` + 1.
       */
 
-    const auto & check_replica_become_inactive = [this, &replica]() {
+    const auto & check_replica_become_inactive = [this, &replica]()
+    {
         return !getZooKeeper()->exists(zookeeper_path + "/replicas/" + replica + "/is_active");
     };
     constexpr auto event_wait_timeout_ms = 1000;
