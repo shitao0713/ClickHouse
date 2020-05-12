@@ -1086,7 +1086,7 @@ Pipes MergeTreeDataSelectExecutor::spreadMarkRangesAmongStreamsFinal(
         pipes.emplace_back(std::move(pipe));
     }
 
-    Names sort_columns = data.getColumnsRequiredForSortingKey();
+    Names sort_columns = data.sorting_key_columns;
     SortDescription sort_description;
     size_t sort_columns_size = sort_columns.size();
     sort_description.reserve(sort_columns_size);
